@@ -5,11 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RestController;
+
 import com.capgemini.brain.buzzer.blitz.model.User;
 import com.capgemini.brain.buzzer.blitz.service.UserService;
 
-
+@CrossOrigin(origins = { "http://localhost:3000", "http://localhost:8080", "http://localhost:8081" })
 @RestController
 @RequestMapping("/users")
 public class UserController {

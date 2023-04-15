@@ -22,9 +22,9 @@ public class UserService {
     }
     
     public User createUser(User user) {
-        if (userRepository.findByUsername(user.getUsername()) != null) {
-            throw new DuplicateKeyException("Username already exists");
-        }
+//        if (userRepository.findByUsername(user.getUsername()) != null) {
+//            throw new DuplicateKeyException("Username already exists");
+//        }
         return userRepository.save(user);
     }
 
