@@ -1,5 +1,6 @@
 package com.capgemini.brain.buzzer.blitz.service;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,17 @@ public class UserService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
     }
-
+    
+ 
+    public User getUserByUsername(String username) {
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (userOptional.isPresent()) {
+            return userOptional.get();
+        } else {
+            throw new ResourceNotFoundException("User not found with username: " + username);
+        }
+    }
+    
     public User updateUser(Long id, User updatedUser) {
         User user = getUserById(id);
         user.setName(updatedUser.getName());

@@ -51,4 +51,16 @@ public class UserController {
         userService.deleteUser(userId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+    
+    @GetMapping("/login")
+    public ResponseEntity<String> login(@RequestParam String username, @RequestParam String password) {
+        User user = userService.getUserByUsername(username);
+        if (user == null || !user.getPassword().equals(password)) {
+            // Incorrect credentials
+            return new ResponseEntity<>("Incorrect username or password", HttpStatus.UNAUTHORIZED);
+        } else {
+            // Correct credentials
+            return new ResponseEntity<>("Login successful", HttpStatus.OK);
+        }
+    }
 }

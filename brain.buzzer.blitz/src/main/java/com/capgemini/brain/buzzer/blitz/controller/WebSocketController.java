@@ -6,7 +6,9 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
+@CrossOrigin(origins = { "http://localhost:3000", "http://localhost:8080", "http://localhost:8081", "http://127.0.0.1:5500/" })
 @Controller
 public class WebSocketController {
 	
