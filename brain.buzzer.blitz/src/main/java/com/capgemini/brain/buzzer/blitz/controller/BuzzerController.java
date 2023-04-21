@@ -173,6 +173,13 @@ public class BuzzerController {
     
     
     
+    @GetMapping("/questions/{id}")
+    public List<Question> getQuestions(@PathVariable Long id){
+        Buzzer buzzer = buzzerRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Buzzer not found"));
+        return buzzer.getQuestions();
+    }
+    
     @GetMapping()
     public List<Buzzer> getAllBuzzers() {
     	return buzzerRepository.findAll();
