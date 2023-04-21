@@ -76,6 +76,16 @@ public class Buzzer {
         }
     }
     
+    public void updatePlayerScore(User currentPlayer, int change) {
+        if (currentPlayer.equals(player1)) {
+            player1Score += change;
+        } else if (currentPlayer.equals(player2)) {
+            player2Score += change;
+        } else {
+            throw new IllegalArgumentException("User not found in this buzzer game.");
+        }
+    }
+    
 	// method to get the opponent user
     public User getOpponentPlayer(User currentPlayer) {
         if (currentPlayer.equals(player1)) {

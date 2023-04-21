@@ -63,13 +63,9 @@ public class BuzzerController {
         User player1 = userRepository.findByUsername(username)
         		.orElseThrow(() -> new IllegalArgumentException("User not found"));
         
-        LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm a");
-        String formatted = now.format(formatter);
-        
         Buzzer buzzer = new Buzzer();
         buzzer.setPlayer1(player1);
-        buzzer.setDateTime(formatted);
+        buzzer.setDateTime(getMyTime());
         buzzer.setPlayer1Score(0);
         buzzer.setPlayer2Score(0);
         buzzer.setGameState("ACTIVE");
@@ -112,13 +108,9 @@ public class BuzzerController {
                 .orElseThrow(() -> new IllegalArgumentException("Buzzer not found"));
         User player1 = buzzer.getPlayer1();
         buzzer.setPlayer2(player2);
-        buzzer.setGameState("JOINED");
+        buzzer.setGameState("READY");
         
         buzzerRepository.save(buzzer);
-        
-        LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm a");
-        String formatted = now.format(formatter);
         
         Map<String, String> map = new HashMap<>();
         
@@ -131,7 +123,7 @@ public class BuzzerController {
         map.put("player2Ratings", player2.getRatings() + "");
         map.put("player2Institute", player2.getInstitute());
         map.put("player2Profession", player2.getProfession());
-        map.put("dateTime", formatted);
+        map.put("dateTime", getMyTime());
         map.put("gameState", buzzer.getGameState());        
 
         ObjectMapper mapper = new ObjectMapper();
@@ -148,13 +140,10 @@ public class BuzzerController {
     public Buzzer beginBuzzer(@PathVariable long id) throws Exception {
         Buzzer buzzer = buzzerRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Buzzer not found"));
-
-        LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm a");
-        String formatted = now.format(formatter);
         
-        buzzer.setGameState("STARTED");
-        buzzer.setDateTime(formatted);
+        buzzer.setGameState("IN_PROGRESS");
+        buzzer.setDateTime(getMyTime());
+        buzzer.setCurrentQuestion(0);
         buzzerRepository.save(buzzer);
         
         Map<String, String> map = new HashMap<>();
@@ -171,7 +160,124 @@ public class BuzzerController {
         return buzzer;
     }
     
+    @PostMapping("/buzzer/{id}/{username}")
+    public synchronized Buzzer buzzerBuzzer(@RequestParam int questionIndex, @RequestParam boolean correct, @RequestParam int score, @PathVariable String username, @PathVariable long id) throws Exception {
+    	
+        User player = userRepository.findByUsername(username)
+        		.orElseThrow(() -> new IllegalArgumentException("User not found"));
+        Buzzer buzzer = buzzerRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Buzzer not found"));
+        
+        if(!buzzer.getGameState().equals("IN_PROGRESS")) return buzzer;
+        
+        if(questionIndex != buzzer.getCurrentQuestion()) {
+        	System.out.println("Already buzzered!!");
+        	return buzzer;
+        }
+        
+        User opponent = buzzer.getOpponentPlayer(player);
+        
+        if(correct) buzzer.updatePlayerScore(player, score);
+        else buzzer.updatePlayerScore(opponent, score);
+        
+        buzzer.setCurrentQuestion(buzzer.getCurrentQuestion()+1);
+        
+        buzzerRepository.save(buzzer);
+        
+        Map<String, String> map = new HashMap<>();
+        
+        map.put("buzzer_id", buzzer.getId() + "");
+        map.put("player1Score", buzzer.getPlayer1Score() + "");
+        map.put("player2Score", buzzer.getPlayer2Score() + "");
+        map.put("score", score + "");
+        map.put("buzzeredBy", player.getUsername());
+        map.put("correct", ((correct) ? "correct" : "incorrect"));
+        map.put("buzzeredAt", getMyExactTime());
+     
+
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString(map);
+        System.out.println(json);
+        
+        notifyUser("buzzered", json, buzzer.getPlayer1().getUsername());
+        notifyUser("buzzered", json, buzzer.getPlayer2().getUsername());
+        
+        return buzzer;
+    }
+
+    @PostMapping("/result/{id}")
+    public synchronized Buzzer resultBuzzer(@PathVariable long id) throws Exception {
+    	
+
+        Buzzer buzzer = buzzerRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Buzzer not found"));
+        
+        if(buzzer.getGameState().equals("INACTIVE")) return buzzer;
+        
+        buzzer.setGameState("INACTIVE");
+        buzzerRepository.save(buzzer);
+        
+        
+        String winner = null;
+        User player1 = buzzer.getPlayer1();
+        User player2 = buzzer.getPlayer2();
+        boolean d = buzzer.getPlayer1Score() > buzzer.getPlayer2Score();
+        
+        Map<String, String> map = new HashMap<>();
+        map.put("buzzer_id", buzzer.getId() + "");
+        map.put("player1RatingsOld", player1.getRatings() + "");
+        map.put("player2RatingsOld", player2.getRatings() + "");
+        
+        if(buzzer.getPlayer1Score() != buzzer.getPlayer2Score()) {
+        	float[] updatedRatings = calculateEloRating((float)player1.getRatings(), (float)player2.getRatings(), d);
+        	player1.setRatings(Math.round(updatedRatings[0]));
+        	player2.setRatings(Math.round(updatedRatings[1]));
+        	
+        	userRepository.save(player1);
+        	userRepository.save(player2);
+        }else winner = "Draw";
+        
+        
+        if(winner != null) winner = (d) ? player1.getName() : player2.getName();
+        
+        map.put("player1RatingsNew", player1.getRatings() + "");
+        map.put("player2RatingsNew", player2.getRatings() + "");
+        map.put("player1Score", buzzer.getPlayer1Score() + "");
+        map.put("player2Score", buzzer.getPlayer2Score() + "");
+        map.put("winner", winner);
+        map.put("EndedAt", getMyExactTime());
+     
+
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString(map);
+        System.out.println(json);
+        
+        notifyUser("result", json, buzzer.getPlayer1().getUsername());
+        notifyUser("result", json, buzzer.getPlayer2().getUsername());
+        
+        return buzzer;
+    }
     
+    
+    private float probability(float rating1, float rating2) {
+        return 1.0f / (1.0f + (float) Math.pow(10, (rating2 - rating1) / 400));
+    }
+    
+    private float[] calculateEloRating(float rating1, float rating2, boolean d) {
+    	int K = 37;
+        float[] ratings = new float[2];
+        float p1 = probability(rating1, rating2);
+        float p2 = probability(rating2, rating1);
+        if (d) {
+            ratings[0] = rating1 + K * (1 - p1);
+            ratings[1] = rating2 + K * (0 - p2);
+        }
+        else {
+            ratings[0] = rating1 + K * (0 - p1);
+            ratings[1] = rating2 + K * (1 - p2);
+        }
+        return ratings;
+    }
     
     @GetMapping("/questions/{id}")
     public List<Question> getQuestions(@PathVariable Long id){
@@ -199,6 +305,19 @@ public class BuzzerController {
     @DeleteMapping("/{id}")
     public void deleteBuzzer(@PathVariable Long id) {
         buzzerRepository.deleteById(id);
+    }
+
+    private String getMyTime() {
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm a");
+        String formatted = now.format(formatter);
+        return formatted;
+    }
+    private String getMyExactTime() {
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm::ss a");
+        String formatted = now.format(formatter);
+        return formatted;
     }
 }
 
