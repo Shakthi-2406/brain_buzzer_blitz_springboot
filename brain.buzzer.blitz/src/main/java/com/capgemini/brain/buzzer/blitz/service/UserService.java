@@ -36,7 +36,7 @@ public class UserService {
     
  
     public User getUserByUsername(String username) {
-        Optional<User> userOptional = userRepository.findByUsername(username);
+        Optional<User> userOptional = Optional.ofNullable(userRepository.findByUsername(username));
         if (userOptional.isPresent()) {
             return userOptional.get();
         } else {

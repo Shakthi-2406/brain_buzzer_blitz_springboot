@@ -17,17 +17,23 @@ public class Buzzer {
     @JoinColumn(name = "player1_id", referencedColumnName = "id", nullable = false)
     private User player1;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "player2_id", referencedColumnName = "id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "player2_id", referencedColumnName = "id", nullable = true)
     private User player2;
     
     @Column
     private String dateTime;
     
     @Column
+    private int currentQuestion;
+
+	@Column
     private String category;
     
     @Column
+    private String difficulty;
+
+	@Column
     private int player1Score;
     
     @Column
@@ -112,6 +118,14 @@ public class Buzzer {
 	public void setDateTime(String dateTime) {
 		this.dateTime = dateTime;
 	}
+	
+    public int getCurrentQuestion() {
+		return currentQuestion;
+	}
+
+	public void setCurrentQuestion(int currentQuestion) {
+		this.currentQuestion = currentQuestion;
+	}
 
 	public String getCategory() {
 		return category;
@@ -121,6 +135,14 @@ public class Buzzer {
 		this.category = category;
 	}
 
+    
+    public String getDifficulty() {
+		return difficulty;
+	}
+
+	public void setDifficulty(String difficulty) {
+		this.difficulty = difficulty;
+	}
 	public int getPlayer1Score() {
 		return player1Score;
 	}
