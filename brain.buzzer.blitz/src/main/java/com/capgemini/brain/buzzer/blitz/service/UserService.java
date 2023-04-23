@@ -23,9 +23,12 @@ public class UserService {
     }
     
     public User createUser(User user) {
-//        if (userRepository.findByUsername(user.getUsername()) != null) {
-//            throw new DuplicateKeyException("Username already exists");
-//        }
+        String username = user.getUsername();
+        if (userRepository.existsByUsername(username) > 0f) {
+            throw new DuplicateKeyException("Username already exists");
+        }
+        user.setBrain_coins(0);
+        user.setRatings(1200);
         return userRepository.save(user);
     }
 

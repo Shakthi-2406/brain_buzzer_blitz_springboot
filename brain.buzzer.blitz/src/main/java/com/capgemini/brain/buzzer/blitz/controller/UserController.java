@@ -30,6 +30,12 @@ public class UserController {
         User user = userService.getUserById(userId);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
+    
+    @GetMapping("username/{username}")
+    public ResponseEntity<User> getUserByUserName(@PathVariable String username) {
+        User user = userService.getUserByUsername(username);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
 
     // Endpoint to create a new user
     @PostMapping("")

@@ -11,6 +11,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -85,6 +87,7 @@ public class BuzzerController {
         map.put("buzzer_id", buzzer.getId() + "");
         map.put("dateTime", buzzer.getDateTime());
         map.put("gameState", buzzer.getGameState());
+        map.put("count", count + "");
         map.put("player1", username);
         map.put("player1Ratings", player1.getRatings() + "");
         map.put("player1Institute", player1.getInstitute());
@@ -99,13 +102,16 @@ public class BuzzerController {
 
     
     @GetMapping("/join/{id}/{username}")
-    public Buzzer joinBuzzer(@PathVariable String username, @PathVariable long id) throws Exception {
+    public ResponseEntity<Buzzer> joinBuzzer(@PathVariable String username, @PathVariable long id) throws Exception {
         User player2 = userRepository.findByUsername(username)
         		.orElseThrow(() -> new IllegalArgumentException("User not found"));
         
         
         Buzzer buzzer = buzzerRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Buzzer not found"));
+        
+        if(buzzer.getPlayer2() != null ) return new ResponseEntity<>(buzzer, HttpStatus.BAD_REQUEST);
+        
         User player1 = buzzer.getPlayer1();
         buzzer.setPlayer2(player2);
         buzzer.setGameState("READY");
@@ -124,7 +130,9 @@ public class BuzzerController {
         map.put("player2Institute", player2.getInstitute());
         map.put("player2Profession", player2.getProfession());
         map.put("dateTime", getMyTime());
-        map.put("gameState", buzzer.getGameState());        
+        map.put("gameState", buzzer.getGameState());   
+        map.put("category", buzzer.getCategory());
+        map.put("difficulty", buzzer.getDifficulty());   
 
         ObjectMapper mapper = new ObjectMapper();
         String json = mapper.writeValueAsString(map);
@@ -133,7 +141,7 @@ public class BuzzerController {
         notifyUser("joined", json, player1.getUsername());
         notifyUser("joined", json, player2.getUsername());
         
-        return buzzer;
+        return new ResponseEntity<>(buzzer, HttpStatus.OK);
     }
     
     @GetMapping("/begin/{id}")
