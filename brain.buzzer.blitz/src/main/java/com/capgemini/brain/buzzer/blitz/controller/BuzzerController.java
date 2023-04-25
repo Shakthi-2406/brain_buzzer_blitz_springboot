@@ -168,6 +168,16 @@ public class BuzzerController {
         return buzzer;
     }
     
+    @PostMapping("/{id}/questionpassed/{questionIndex}")
+    public Buzzer questionPassed(@PathVariable long id, @PathVariable int questionIndex) {
+        Buzzer buzzer = buzzerRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Buzzer not found"));
+        int qInDB = buzzer.getCurrentQuestion();
+        if(questionIndex == qInDB) buzzer.setCurrentQuestion(questionIndex+1);
+        buzzerRepository.save(buzzer);
+        return buzzer;
+    }
+    
     @PostMapping("/buzzer/{id}/{username}")
     public synchronized Buzzer buzzerBuzzer(@RequestParam int questionIndex, @RequestParam boolean correct, @RequestParam int score, @PathVariable String username, @PathVariable long id) throws Exception {
     	
@@ -246,7 +256,8 @@ public class BuzzerController {
         }else winner = "Draw";
         
         
-        if(winner != null) winner = (d) ? player1.getName() : player2.getName();
+        winner = (d) ? player1.getUsername() : player2.getUsername();
+        if(buzzer.getPlayer1Score() == buzzer.getPlayer2Score()) winner = "draw";
         
         map.put("player1RatingsNew", player1.getRatings() + "");
         map.put("player2RatingsNew", player2.getRatings() + "");
@@ -323,7 +334,7 @@ public class BuzzerController {
     }
     private String getMyExactTime() {
         LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm::ss a");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm:ss a");
         String formatted = now.format(formatter);
         return formatted;
     }
