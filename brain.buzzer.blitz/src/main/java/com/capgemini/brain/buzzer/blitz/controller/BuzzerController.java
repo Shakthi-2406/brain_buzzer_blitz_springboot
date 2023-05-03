@@ -6,6 +6,7 @@ import com.capgemini.brain.buzzer.blitz.model.User;
 import com.capgemini.brain.buzzer.blitz.repository.BuzzerRepository;
 import com.capgemini.brain.buzzer.blitz.repository.QuestionRepository;
 import com.capgemini.brain.buzzer.blitz.repository.UserRepository;
+import com.capgemini.brain.buzzer.blitz.service.QuestionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,8 @@ public class BuzzerController {
     private UserRepository userRepository;
 
     @Autowired
-    private QuestionRepository questionRepository;
+    private QuestionService questionService;
+    
     
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
@@ -76,7 +78,7 @@ public class BuzzerController {
         buzzer.setCurrentQuestion(0);
         
         Pageable pageable = PageRequest.of(0, count); // Retrieve the first 10 questions
-        List<Question> questions = questionRepository.findByCategoryAndDifficulty(category, difficulty, pageable);
+        List<Question> questions = questionService.findByCategoryAndDifficultyLike(category, difficulty, pageable);
         buzzer.setQuestions(questions);
         buzzerRepository.save(buzzer);
         

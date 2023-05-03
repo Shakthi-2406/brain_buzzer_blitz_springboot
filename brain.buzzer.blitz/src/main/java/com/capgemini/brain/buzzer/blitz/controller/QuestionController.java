@@ -1,6 +1,7 @@
 package com.capgemini.brain.buzzer.blitz.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,14 +18,26 @@ import org.springframework.web.bind.annotation.RestController;
 import com.capgemini.brain.buzzer.blitz.exception.ResourceNotFoundException;
 import com.capgemini.brain.buzzer.blitz.model.Question;
 import com.capgemini.brain.buzzer.blitz.repository.QuestionRepository;
+import com.capgemini.brain.buzzer.blitz.service.QuestionService;
 
 @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:8080", "http://localhost:8081" })
 @RestController
 @RequestMapping("/questions")
 public class QuestionController {
+	
     @Autowired
     private QuestionRepository questionRepository;
+    
+    @Autowired
+    private QuestionService questionService;
 
+    
+    @GetMapping("/streams")
+    public ResponseEntity<Map<String, List<String>>> findAllStreamsAndCategories() {
+		Map<String, List<String>> result = questionService.findAllStreamsAndCategories();
+        return ResponseEntity.ok(result);
+    } 
+    
     // Get all questions
     @GetMapping("")
     public List<Question> getAllQuestions() {
