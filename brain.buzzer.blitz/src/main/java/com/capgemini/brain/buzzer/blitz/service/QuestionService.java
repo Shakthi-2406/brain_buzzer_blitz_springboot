@@ -28,8 +28,8 @@ public class QuestionService {
     }
     
     
-    public List<Question> findByCategoryAndDifficultyLike(String category, String difficultyLike, Pageable pageable) {
-        List<Question> questions = questionRepository.findByCategoryAndDifficultyLike(category, difficultyLike);
+    public List<Question> findByStreamAndDifficultyAndCategoryLike(String stream, String difficulty, String categoryLike, Pageable pageable) {
+        List<Question> questions = questionRepository.findByStreamAndDifficultyAndCategoryLike(stream, difficulty, categoryLike);
         Collections.shuffle(questions);
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), questions.size());

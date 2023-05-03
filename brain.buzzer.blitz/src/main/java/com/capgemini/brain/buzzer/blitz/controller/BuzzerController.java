@@ -1,12 +1,15 @@
 package com.capgemini.brain.buzzer.blitz.controller;
 
 import com.capgemini.brain.buzzer.blitz.model.Buzzer;
+import java.security.SecureRandom;
+import java.util.Base64;
 import com.capgemini.brain.buzzer.blitz.model.Question;
 import com.capgemini.brain.buzzer.blitz.model.User;
 import com.capgemini.brain.buzzer.blitz.repository.BuzzerRepository;
 import com.capgemini.brain.buzzer.blitz.repository.QuestionRepository;
 import com.capgemini.brain.buzzer.blitz.repository.UserRepository;
 import com.capgemini.brain.buzzer.blitz.service.QuestionService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,7 +66,7 @@ public class BuzzerController {
 
 
     @GetMapping("/create/{username}")
-    public Buzzer createBuzzer(@PathVariable String username, @RequestParam String category, @RequestParam String difficulty, @RequestParam int count) throws Exception {
+    public Buzzer createBuzzer(@PathVariable String username, @RequestParam String stream,@RequestParam String categoryLike, @RequestParam String difficulty, @RequestParam int count) throws Exception {
         User player1 = userRepository.findByUsername(username)
         		.orElseThrow(() -> new IllegalArgumentException("User not found"));
         
@@ -73,27 +76,42 @@ public class BuzzerController {
         buzzer.setPlayer1Score(0);
         buzzer.setPlayer2Score(0);
         buzzer.setGameState("ACTIVE");
-        buzzer.setCategory(category);
+        buzzer.setCategory(categoryLike);
+        buzzer.setStream(stream);
         buzzer.setDifficulty(difficulty);
         buzzer.setCurrentQuestion(0);
+        buzzer.setQuestionCount(count);
         
         Pageable pageable = PageRequest.of(0, count); // Retrieve the first 10 questions
-        List<Question> questions = questionService.findByCategoryAndDifficultyLike(category, difficulty, pageable);
+        List<Question> questions = questionService.findByStreamAndDifficultyAndCategoryLike(stream, difficulty, categoryLike, pageable);
         buzzer.setQuestions(questions);
+        String sc = generateSecretCode(17);
+        buzzer.setSecretCode(sc);
+        
         buzzerRepository.save(buzzer);
+        return buzzer;
+    }
+
+    
+    @GetMapping("/share/{id}")
+    public Buzzer shareOnline(@PathVariable long id) throws JsonProcessingException {
+        Buzzer buzzer = buzzerRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Buzzer not found"));
         
         Map<String, String> map = new HashMap<>();
         
-        map.put("category", category);
-        map.put("difficulty", difficulty);
+        map.put("category", buzzer.getCategory());
+        map.put("stream", buzzer.getStream());
+        map.put("difficulty", buzzer.getDifficulty());
         map.put("buzzer_id", buzzer.getId() + "");
         map.put("dateTime", buzzer.getDateTime());
         map.put("gameState", buzzer.getGameState());
-        map.put("count", count + "");
-        map.put("player1", username);
-        map.put("player1Ratings", player1.getRatings() + "");
-        map.put("player1Institute", player1.getInstitute());
-        map.put("player1Profession", player1.getProfession());
+        map.put("secretCode", buzzer.getSecretCode());
+        map.put("count", buzzer.getQuestionCount() + "");
+        map.put("player1", buzzer.getPlayer1().getUsername());
+        map.put("player1Ratings", buzzer.getPlayer1().getRatings() + "");
+        map.put("player1Institute", buzzer.getPlayer1().getInstitute());
+        map.put("player1Profession", buzzer.getPlayer1().getProfession());
 
         ObjectMapper mapper = new ObjectMapper();
         String json = mapper.writeValueAsString(map);
@@ -101,18 +119,22 @@ public class BuzzerController {
         sendToAll(json);
         return buzzer;
     }
-
     
-    @GetMapping("/join/{id}/{username}")
-    public ResponseEntity<Buzzer> joinBuzzer(@PathVariable String username, @PathVariable long id) throws Exception {
+    
+    
+    @GetMapping("/join/{secretCode}/{username}")
+    public ResponseEntity<Buzzer> joinBuzzer(@PathVariable String username, @PathVariable String secretCode) throws Exception {
         User player2 = userRepository.findByUsername(username)
         		.orElseThrow(() -> new IllegalArgumentException("User not found"));
         
         
-        Buzzer buzzer = buzzerRepository.findById(id)
+        Buzzer buzzer = buzzerRepository.findBySecretCode(secretCode)
                 .orElseThrow(() -> new IllegalArgumentException("Buzzer not found"));
         
+        
         if(buzzer.getPlayer2() != null ) return new ResponseEntity<>(buzzer, HttpStatus.BAD_REQUEST);
+
+        if(buzzer.getPlayer1() == player2 ) return new ResponseEntity<>(buzzer, HttpStatus.BAD_REQUEST);
         
         User player1 = buzzer.getPlayer1();
         buzzer.setPlayer2(player2);
@@ -339,6 +361,13 @@ public class BuzzerController {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm:ss a");
         String formatted = now.format(formatter);
         return formatted;
+    }
+    private String generateSecretCode(int LENGTH) {
+        SecureRandom random = new SecureRandom();
+        byte[] bytes = new byte[LENGTH];
+        random.nextBytes(bytes);
+        String code = Base64.getUrlEncoder().encodeToString(bytes);
+        return code;
     }
 }
 

@@ -26,11 +26,20 @@ public class Buzzer {
     
     @Column
     private int currentQuestion;
+    
+    @Column
+    private int questionCount;
+    
+    @Column
+    private String secretCode;
 
 	@Column
     private String category;
-    
-    @Column
+	
+	@Column(nullable = true)
+	private String stream;
+
+	@Column
     private String difficulty;
 
 	@Column
@@ -97,6 +106,14 @@ public class Buzzer {
         }
     }
 
+	public int getQuestionCount() {
+		return questionCount;
+	}
+
+	public void setQuestionCount(int questionCount) {
+		this.questionCount = questionCount;
+	}
+
 	public Long getId() {
 		return id;
 	}
@@ -144,9 +161,16 @@ public class Buzzer {
 	public void setCategory(String category) {
 		this.category = category;
 	}
+	
+    public String getSecretCode() {
+		return secretCode;
+	}
 
-    
-    public String getDifficulty() {
+	public void setSecretCode(String secretCode) {
+		this.secretCode = secretCode;
+	}
+
+	public String getDifficulty() {
 		return difficulty;
 	}
 
@@ -183,6 +207,14 @@ public class Buzzer {
 
 	public void setQuestions(List<Question> questions) {
 		this.questions = questions;
+	}
+	
+    public String getStream() {
+		return stream;
+	}
+
+	public void setStream(String stream) {
+		this.stream = stream;
 	}
 
 	@Override
