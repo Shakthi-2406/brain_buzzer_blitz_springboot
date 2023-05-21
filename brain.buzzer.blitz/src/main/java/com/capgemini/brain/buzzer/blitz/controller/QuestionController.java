@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,9 +15,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.capgemini.brain.buzzer.blitz.exception.ResourceNotFoundException;
+import com.capgemini.brain.buzzer.blitz.model.Buzzer;
 import com.capgemini.brain.buzzer.blitz.model.Question;
 import com.capgemini.brain.buzzer.blitz.repository.QuestionRepository;
 import com.capgemini.brain.buzzer.blitz.service.QuestionService;
@@ -53,9 +57,19 @@ public class QuestionController {
     @PostMapping("/questions")
     public ResponseEntity<String> addQuestions(@RequestBody List<Question> questions) {
         // Code to add questions to the database
+        questionRepository.saveAll(questions);
         return ResponseEntity.ok("Questions added successfully");
     }
-
+  
+    
+    @GetMapping("/individual/questions")
+    public List<Question> getQuestions(@RequestParam String stream,@RequestParam String categoryLike, @RequestParam String difficulty, @RequestParam int count) throws Exception {
+    	Pageable pageable = PageRequest.of(0, count); // Retrieve the first 10 questions
+        List<Question> questions = questionService.findByStreamAndDifficultyLikeAndCategoryLike(stream, difficulty, categoryLike, pageable);
+    	return questions;
+    }
+    
+    
     // Get a single question by id
     @GetMapping("/{id}")
     public Question getQuestionById(@PathVariable(value = "id") Long questionId) {
@@ -63,6 +77,7 @@ public class QuestionController {
                 .orElseThrow(() -> new ResourceNotFoundException("Question", "id", questionId));
     }
 
+        
     // Update a question
     @PutMapping("/{id}")
     public Question updateQuestion(@PathVariable(value = "id") Long questionId,

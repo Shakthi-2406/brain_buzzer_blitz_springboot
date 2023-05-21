@@ -83,7 +83,7 @@ public class BuzzerController {
         buzzer.setQuestionCount(count);
         
         Pageable pageable = PageRequest.of(0, count); // Retrieve the first 10 questions
-        List<Question> questions = questionService.findByStreamAndDifficultyAndCategoryLike(stream, difficulty, categoryLike, pageable);
+        List<Question> questions = questionService.findByStreamAndDifficultyLikeAndCategoryLike(stream, difficulty, categoryLike, pageable);
         buzzer.setQuestions(questions);
         String sc = generateSecretCode(17);
         buzzer.setSecretCode(sc);

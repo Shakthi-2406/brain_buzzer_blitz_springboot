@@ -13,7 +13,7 @@ public interface QuestionRepository  extends JpaRepository<Question, Long> {
 	
 	List<Question> findByCategory(String category);
 	
-	List<Question> findByStreamAndDifficultyAndCategoryLike(String stream, String difficulty, String categoryLike);
+	List<Question> findByStreamAndDifficultyLikeAndCategoryLike(String stream, String difficultyLike, String categoryLike);
 	
 	
     @Query("SELECT DISTINCT q.stream FROM Question q")
