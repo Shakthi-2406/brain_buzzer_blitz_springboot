@@ -9,9 +9,11 @@ Brain Buzzer Blitz is a real-time online quiz competition platform that allows u
 - **Compete with Stranger**: Challenge online users by sending all online users notifications with quiz details. Once they accept, engage in a real-time quiz battle.
 - **Challenge Your Friend**: Create a secret buzzer code and invite friends to join a quiz competition using the code.
 
+![image](https://github.com/Shakthi-2406/brain_buzzer_blitz_springboot/assets/84411432/a7d34164-6e3f-4fb5-a467-1f78814e2605)
 ![Screenshot (210)](https://github.com/Shakthi-2406/brain_buzzer_blitz_springboot/assets/84411432/c95a2a2b-7103-46ed-a3aa-95f02a42e9ad)
 ![image](https://github.com/Shakthi-2406/brain_buzzer_blitz_springboot/assets/84411432/0bf3a1eb-e45b-49c2-b195-e3691494ab5d)
 ![image](https://github.com/Shakthi-2406/brain_buzzer_blitz_springboot/assets/84411432/dbd408da-79c3-4e0c-95bc-151bb68a12be)
+![image](https://github.com/Shakthi-2406/brain_buzzer_blitz_springboot/assets/84411432/0a2384ad-ccd4-4cec-b81b-9ee8cf93573a)
 
 
 
